@@ -1,0 +1,1281 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>SIBT V TOOL — Photo + Audio to Video</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      :root{
+        --bg:#eef0f3;
+        --surface:#ffffff;
+        --surface-2:#e7eaef;
+        --ink:#12161d;
+        --ink-2:#4d5768;
+        --ink-3:#8590a1;
+        --line:#d9dee6;
+        --accent:#e07b00;
+        --accent-strong:#c96a00;
+        --accent-soft:rgba(224,123,0,.12);
+        --ok:#0e7a55;
+        --ok-soft:rgba(14,122,85,.12);
+        --bad:#c93a2b;
+        --bad-soft:rgba(201,58,43,.1);
+        --header-bg:#0a0d12;
+        --shadow:0 1px 2px rgba(16,22,32,.06),0 8px 24px -12px rgba(16,22,32,.18);
+        --radius:14px;
+      }
+      @media (prefers-color-scheme: dark){
+        :root{
+          --bg:#0b0e13;
+          --surface:#141a23;
+          --surface-2:#1c232f;
+          --ink:#f0f3f8;
+          --ink-2:#a3aebd;
+          --ink-3:#6e7a8c;
+          --line:#262f3e;
+          --accent:#ffb020;
+          --accent-strong:#ffb020;
+          --accent-soft:rgba(255,176,32,.13);
+          --ok:#2fbf8f;
+          --ok-soft:rgba(47,191,143,.13);
+          --bad:#ff6a5c;
+          --bad-soft:rgba(255,106,92,.12);
+          --shadow:0 1px 2px rgba(0,0,0,.35),0 10px 28px -12px rgba(0,0,0,.55);
+        }
+      }
+      *{box-sizing:border-box}
+      html{-webkit-text-size-adjust:100%}
+      body{
+        margin:0;background:var(--bg);color:var(--ink);
+        font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+        font-size:15px;line-height:1.45;
+      }
+      button{font:inherit;cursor:pointer}
+      select,input{font:inherit}
+      :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+      /* ---------- Header / logo ---------- */
+      header{
+        background:var(--header-bg);color:#eef1f6;
+        padding:22px 16px 18px;text-align:center;
+        border-bottom:3px solid var(--accent);
+      }
+      .logo{
+        font-family:"Archivo",sans-serif;font-weight:900;font-style:italic;
+        font-size:clamp(34px,9vw,56px);letter-spacing:.04em;line-height:1;
+        display:flex;justify-content:center;align-items:baseline;gap:.28em;flex-wrap:wrap;
+        user-select:none;
+      }
+      .logo .word{display:inline-flex}
+      .logo .lt{
+        color:#39414f;display:inline-block;
+        animation:lightSeq 3.4s ease-in-out infinite;
+      }
+      .logo .lt:nth-child(1){animation-delay:0s}
+      .logo .lt:nth-child(2){animation-delay:.22s}
+      .logo .lt:nth-child(3){animation-delay:.44s}
+      .logo .lt:nth-child(4){animation-delay:.66s}
+      @keyframes lightSeq{
+        0%,100%{color:#39414f;text-shadow:none}
+        10%,52%{color:#ffd97a;text-shadow:0 0 6px rgba(255,190,50,.95),0 0 18px rgba(255,176,32,.85),0 0 42px rgba(255,150,20,.55)}
+        66%{color:#39414f;text-shadow:none}
+      }
+      .logo .vtool{color:var(--accent);animation:vPulse 3.4s ease-in-out infinite}
+      @keyframes vPulse{
+        0%,100%{opacity:1;text-shadow:0 0 14px rgba(255,176,32,.45)}
+        50%{opacity:.72;text-shadow:none}
+      }
+      .tagline{margin:9px 0 0;color:#98a2b3;font-size:13.5px;font-weight:600;letter-spacing:.02em}
+      .tagline b{color:#e8ecf2;font-weight:800}
+      .engine-line{margin:7px 0 0;font-size:12.5px;color:#77808f;font-weight:600}
+      .engine-line.ok{color:#39c493}
+      .engine-line.bad{color:#ff7a6b}
+      @media (prefers-reduced-motion: reduce){
+        .logo .lt{animation:none;color:#ffd97a;text-shadow:0 0 18px rgba(255,176,32,.7)}
+        .logo .vtool{animation:none}
+      }
+
+      main{max-width:1060px;margin:0 auto;padding:18px 14px 250px}
+
+      /* ---------- Upload boxes ---------- */
+      .uploads{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+      @media (max-width:640px){.uploads{grid-template-columns:1fr}}
+      .drop{
+        background:var(--surface);border:2px dashed var(--line);border-radius:var(--radius);
+        padding:18px 16px 14px;box-shadow:var(--shadow);transition:border-color .15s,background .15s;
+      }
+      .drop.drag{border-color:var(--accent);background:var(--accent-soft)}
+      .drop.filled{border-style:solid;border-color:var(--line)}
+      .drop-head{display:flex;align-items:center;gap:12px}
+      .drop-ico{
+        width:46px;height:46px;flex:0 0 46px;border-radius:12px;background:var(--accent-soft);
+        display:grid;place-items:center;color:var(--accent-strong);
+      }
+      .drop-ico svg{width:25px;height:25px}
+      .drop-title{font-family:"Archivo",sans-serif;font-weight:800;font-size:17px;letter-spacing:.01em}
+      .drop-sub{color:var(--ink-2);font-size:12.5px;font-weight:600}
+      .drop-count{
+        margin-left:auto;background:var(--surface-2);color:var(--ink-2);border-radius:999px;
+        font-weight:800;font-size:12.5px;padding:4px 10px;white-space:nowrap;
+      }
+      .drop-count.has{background:var(--accent);color:#131313}
+      .drop-btn{
+        margin-top:14px;width:100%;border:0;border-radius:10px;padding:12px;
+        background:var(--ink);color:var(--bg);font-weight:800;font-size:14.5px;
+      }
+      @media (prefers-color-scheme: dark){.drop-btn{background:#e8ecf2;color:#10141b}}
+      .drop-btn:active{transform:translateY(1px)}
+      .thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+      .thumbs img{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+      .thumbs .more{
+        width:44px;height:44px;border-radius:8px;background:var(--surface-2);color:var(--ink-2);
+        display:grid;place-items:center;font-weight:800;font-size:12px;
+      }
+      .alist{margin:12px 0 0;padding:0;list-style:none;max-height:118px;overflow:auto}
+      .alist li{
+        display:flex;gap:8px;align-items:baseline;padding:4.5px 2px;font-size:12.5px;font-weight:600;
+        border-bottom:1px solid var(--line);color:var(--ink-2);
+      }
+      .alist li:last-child{border-bottom:0}
+      .alist .n{color:var(--ink-3);font-weight:800;min-width:20px}
+      .alist .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+      .alist .d{color:var(--ink-3);font-variant-numeric:tabular-nums}
+      .clear-link{
+        margin-top:10px;background:none;border:0;color:var(--bad);font-weight:700;font-size:12.5px;padding:2px 0;
+      }
+
+      /* ---------- Stats ---------- */
+      .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+      @media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+      .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;box-shadow:var(--shadow)}
+      .stat .v{font-family:"Archivo",sans-serif;font-weight:800;font-size:21px;line-height:1.1;font-variant-numeric:tabular-nums}
+      .stat .k{color:var(--ink-2);font-size:12px;font-weight:700;margin-top:2px}
+
+      .top-actions{display:flex;gap:10px;margin-top:14px}
+      .top-actions .big-btn{border-radius:12px}
+      .top-actions .create{flex:1.2}
+      .top-actions .download{flex:1}
+      /* On phones the sticky bottom bar already keeps Create All / Download All
+         on screen at all times, so the duplicate top row is hidden there. */
+      @media (max-width:640px){.top-actions{display:none}}
+
+      /* ---------- Sections ---------- */
+      .sec-head{display:flex;align-items:baseline;gap:10px;margin:26px 2px 12px;flex-wrap:wrap}
+      .sec-head h2{font-family:"Archivo",sans-serif;font-size:20px;font-weight:800;margin:0}
+      .sec-head p{margin:0;color:var(--ink-2);font-size:13px;font-weight:600}
+      .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(308px,1fr));gap:12px}
+      @media (max-width:380px){.grid{grid-template-columns:1fr}}
+      .card{
+        background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+        padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:11px;
+      }
+      .card-top{display:flex;align-items:center;gap:9px}
+      .badge{
+        font-family:"Archivo",sans-serif;font-weight:800;font-size:13px;background:var(--surface-2);
+        border-radius:8px;padding:4px 9px;
+      }
+      .pill{margin-left:auto;font-size:11.5px;font-weight:800;padding:4px 9px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+      .pill.working{background:var(--accent-soft);color:var(--accent-strong)}
+      .pill.done{background:var(--ok-soft);color:var(--ok)}
+      .pill.error{background:var(--bad-soft);color:var(--bad)}
+      .card-media{display:flex;gap:11px}
+      .card-media img{
+        width:86px;height:86px;flex:0 0 86px;object-fit:cover;border-radius:10px;border:1px solid var(--line);
+        background:var(--surface-2);
+      }
+      .card-media .noimg{
+        width:86px;height:86px;flex:0 0 86px;border-radius:10px;border:1.5px dashed var(--line);
+        display:grid;place-items:center;color:var(--ink-3);font-size:11px;font-weight:800;text-align:center;padding:4px;
+      }
+      .fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+      .fields label{font-size:11px;font-weight:800;color:var(--ink-3);letter-spacing:.05em;text-transform:uppercase;display:block;margin-bottom:3px}
+      select.sel{
+        width:100%;padding:8px 9px;border-radius:9px;border:1px solid var(--line);
+        background:var(--surface);color:var(--ink);font-weight:700;font-size:13.5px;max-width:100%;
+      }
+      .aname{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .ameta{font-size:12.5px;color:var(--ink-2);font-weight:600;font-variant-numeric:tabular-nums}
+      .ameta b{color:var(--accent-strong)}
+      .bar{height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:none}
+      .bar.on{display:block}
+      .bar i{display:block;height:100%;width:0%;background:var(--accent);border-radius:99px;transition:width .18s}
+      .bar.done i{background:var(--ok)}
+      .card-actions{display:flex;gap:8px;margin-top:auto}
+      .btn{
+        border:1px solid var(--line);background:var(--surface);color:var(--ink);
+        border-radius:10px;padding:10px 13px;font-weight:800;font-size:13.5px;
+      }
+      .btn:active{transform:translateY(1px)}
+      .btn.primary{background:var(--accent);border-color:var(--accent);color:#161006}
+      .btn.primary:disabled{background:var(--surface-2);border-color:var(--line);color:var(--ink-3)}
+      .btn:disabled{opacity:.55;cursor:default}
+      .btn.grow{flex:1}
+      .btn.dl{background:var(--ok-soft);border-color:transparent;color:var(--ok)}
+      .card video{width:100%;border-radius:10px;background:#000;max-height:210px}
+      .err-text{color:var(--bad);font-size:12.5px;font-weight:600}
+      .empty{
+        border:2px dashed var(--line);border-radius:var(--radius);padding:34px 20px;text-align:center;
+        color:var(--ink-2);font-weight:600;background:var(--surface);
+      }
+      .empty b{color:var(--ink)}
+
+      /* ---------- Bottom action bar ---------- */
+      .actionbar{
+        position:fixed;left:0;right:0;bottom:0;z-index:40;
+        background:color-mix(in srgb,var(--surface) 92%,transparent);
+        backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+        border-top:1px solid var(--line);
+        padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+      }
+      .actionbar-in{max-width:1060px;margin:0 auto;display:flex;flex-direction:column;gap:9px}
+      .ab-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+      .ab-row .grow{flex:1}
+      .ab-status{font-size:12.5px;font-weight:700;color:var(--ink-2);min-height:16px;font-variant-numeric:tabular-nums}
+      .ab-bar{height:6px;border-radius:99px;background:var(--surface-2);overflow:hidden;display:none}
+      .ab-bar.on{display:block}
+      .ab-bar i{display:block;height:100%;width:0%;background:var(--accent);transition:width .2s}
+      .mini{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:var(--ink-2)}
+      .mini select{padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700}
+      .big-btn{
+        border:0;border-radius:11px;padding:13px 18px;font-weight:800;font-size:15px;
+        font-family:"Archivo",sans-serif;letter-spacing:.01em;
+      }
+      .big-btn.create{background:var(--accent);color:#161006;flex:1.2}
+      .big-btn.download{background:var(--ink);color:var(--bg);flex:1}
+      @media (prefers-color-scheme: dark){.big-btn.download{background:#e8ecf2;color:#10141b}}
+      .big-btn:disabled{opacity:.5}
+      .big-btn:active{transform:translateY(1px)}
+      .ghost-btn{background:none;border:1px solid var(--line);color:var(--bad);border-radius:11px;padding:12px 14px;font-weight:800}
+      .hidden{display:none !important}
+
+      .howto{margin-top:30px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow)}
+      .howto h3{margin:0 0 8px;font-family:"Archivo",sans-serif;font-size:15.5px}
+      .howto ol{margin:0;padding-left:19px;color:var(--ink-2);font-weight:600;font-size:13.5px;display:grid;gap:5px}
+      .howto b{color:var(--ink)}
+      footer{margin-top:16px;text-align:center;color:var(--ink-3);font-size:12px;font-weight:600;padding-bottom:6px}
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo" aria-label="SIBT V TOOL">
+        <span class="word" aria-hidden="true"><span class="lt">S</span><span class="lt">I</span><span class="lt">B</span><span class="lt">T</span></span>
+        <span class="vtool" aria-hidden="true">V&nbsp;TOOL</span>
+      </div>
+      <p class="tagline">Turn <b>photos + audios</b> into YouTube-ready videos — in bulk, right on your phone.</p>
+      <p class="engine-line" id="engineLine">Checking video engine…</p>
+    </header>
+
+    <main>
+      <!-- Upload boxes -->
+      <section class="uploads">
+        <div class="drop" id="photoDrop">
+          <div class="drop-head">
+            <div class="drop-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+            </div>
+            <div>
+              <div class="drop-title">Upload Photos</div>
+              <div class="drop-sub">JPG, PNG, WEBP — one per video</div>
+            </div>
+            <div class="drop-count" id="photoCount">0 photos</div>
+          </div>
+          <button class="drop-btn" id="photoBtn" type="button">Select Photos</button>
+          <div class="thumbs" id="photoThumbs"></div>
+          <button class="clear-link hidden" id="photoClear" type="button">Remove all photos</button>
+          <input type="file" id="photoInput" accept="image/*" multiple hidden />
+        </div>
+
+        <div class="drop" id="audioDrop">
+          <div class="drop-head">
+            <div class="drop-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            </div>
+            <div>
+              <div class="drop-title">Upload Audios</div>
+              <div class="drop-sub">MP3, M4A, WAV, OGG — one per video</div>
+            </div>
+            <div class="drop-count" id="audioCount">0 audios</div>
+          </div>
+          <button class="drop-btn" id="audioBtn" type="button">Select Audios</button>
+          <ul class="alist" id="audioList"></ul>
+          <button class="clear-link hidden" id="audioClear" type="button">Remove all audios</button>
+          <input type="file" id="audioInput" accept="audio/*,.mp3,.m4a,.wav,.ogg,.oga,.opus,.aac,.flac" multiple hidden />
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section class="stats" aria-label="Summary">
+        <div class="stat"><div class="v" id="stPhotos">0</div><div class="k">Photos</div></div>
+        <div class="stat"><div class="v" id="stAudios">0</div><div class="k">Audios</div></div>
+        <div class="stat"><div class="v" id="stSections">0</div><div class="k">Video sections</div></div>
+        <div class="stat"><div class="v" id="stDone">0 / 0</div><div class="k">Videos ready</div></div>
+      </section>
+
+      <!-- Top actions -->
+      <div class="top-actions">
+        <button class="big-btn create" id="createAllBtnTop" type="button" disabled>Create All</button>
+        <button class="big-btn download" id="downloadAllBtnTop" type="button" disabled>Download All</button>
+      </div>
+
+      <!-- Sections -->
+      <div class="sec-head">
+        <h2>Video Sections</h2>
+        <p>Pick which photo plays on each audio, set the repeater, then hit Create All.</p>
+      </div>
+      <div id="sectionsWrap">
+        <div class="empty" id="emptyState"><b>No sections yet.</b><br />Upload photos and audios above — sections are created automatically, one per pair.</div>
+        <div class="grid" id="grid"></div>
+      </div>
+
+      <div class="howto">
+        <h3>How it works</h3>
+        <ol>
+          <li><b>Upload</b> your photos and audios — every audio becomes one video section.</li>
+          <li><b>Match</b> a photo to each audio. A photo is never used on two audios at once — picking one swaps it automatically.</li>
+          <li><b>Repeater</b> loops the audio inside the video: a 7-minute audio at 7× becomes a 49-minute video with the same picture.</li>
+          <li><b>Create All</b> renders every video on this device (nothing is uploaded anywhere), then <b>Download All</b> saves them.</li>
+        </ol>
+      </div>
+      <footer>SIBT V TOOL · Videos are rendered locally in your browser at YouTube size (1280×720 HD by default).</footer>
+    </main>
+
+    <!-- Sticky action bar -->
+    <div class="actionbar">
+      <div class="actionbar-in">
+        <div class="ab-bar" id="abBar"><i id="abBarFill"></i></div>
+        <div class="ab-row">
+          <span class="ab-status" id="abStatus">Add photos &amp; audios to begin.</span>
+        </div>
+        <div class="ab-row">
+          <label class="mini">Size
+            <select id="resSel">
+              <option value="720" selected>720p HD</option>
+              <option value="1080">1080p Full HD</option>
+              <option value="480">480p Fast</option>
+            </select>
+          </label>
+          <label class="mini">Repeat all
+            <select id="repeatAllSel">
+              <option value="2" selected>2×</option><option value="3">3×</option>
+              <option value="4">4×</option><option value="5">5×</option><option value="6">6×</option>
+              <option value="7">7×</option><option value="8">8×</option><option value="9">9×</option>
+              <option value="10">10×</option>
+            </select>
+          </label>
+          <button class="ghost-btn hidden" id="cancelBtn" type="button">Cancel</button>
+          <span class="grow"></span>
+          <button class="big-btn download" id="downloadAllBtn" type="button" disabled>Download All</button>
+          <button class="big-btn create" id="createAllBtn" type="button" disabled>Create All</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    'use strict';
+    /* ============================================================
+       SIBT V TOOL — batch photo+audio → MP4 video creator.
+       Rendering uses WebCodecs (hardware H.264 + AAC) with a
+       built-in MP4 muxer. The still image is encoded as sparse
+       long-duration frames and the audio is looped inside the
+       encoder, so long videos render in seconds, not real time.
+       ============================================================ */
+    var $ = function(id){ return document.getElementById(id); };
+
+    var state = {
+      photos: [],   // {file, url, name}
+      audios: [],   // {file, url, name, dur (sec|null)}
+      sections: [], // {photo, audio, repeat, status, progress, blobUrl, blobSize, error}
+      rendering: false,
+      cancel: false,
+      res: 720
+    };
+
+    /* ---------------- helpers ---------------- */
+    function fmtDur(sec){
+      if (sec == null || !isFinite(sec)) return '–:––';
+      sec = Math.round(sec);
+      var h = Math.floor(sec/3600), m = Math.floor((sec%3600)/60), s = sec%60;
+      var mm = (h>0 && m<10) ? '0'+m : ''+m;
+      var ss = s<10 ? '0'+s : ''+s;
+      return h>0 ? h+':'+mm+':'+ss : mm+':'+ss;
+    }
+    function fmtSize(b){
+      if (b == null) return '';
+      if (b < 1024) return b+' B';
+      if (b < 1048576) return (b/1024).toFixed(1)+' KB';
+      return (b/1048576).toFixed(1)+' MB';
+    }
+    function safeName(n){
+      return (n||'audio').replace(/\.[^.]+$/,'').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'_').slice(0,40) || 'audio';
+    }
+    function esc(s){
+      return String(s).replace(/[&<>"']/g, function(c){
+        return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+      });
+    }
+    function resDims(){
+      if (state.res === 1080) return {w:1920, h:1080, vbr:6000000};
+      if (state.res === 480)  return {w:854,  h:480,  vbr:1600000};
+      return {w:1280, h:720, vbr:3000000};
+    }
+
+    /* ---------------- uploads ---------------- */
+    function bindDrop(dropEl, inputEl, kind){
+      dropEl.addEventListener('dragover', function(e){ e.preventDefault(); dropEl.classList.add('drag'); });
+      dropEl.addEventListener('dragleave', function(){ dropEl.classList.remove('drag'); });
+      dropEl.addEventListener('drop', function(e){
+        e.preventDefault(); dropEl.classList.remove('drag');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(kind, e.dataTransfer.files);
+      });
+      inputEl.addEventListener('change', function(){
+        if (inputEl.files && inputEl.files.length) addFiles(kind, inputEl.files);
+        inputEl.value = '';
+      });
+    }
+
+    function addFiles(kind, fileList){
+      var files = Array.prototype.slice.call(fileList);
+      files.forEach(function(f){
+        var item = { file:f, url: URL.createObjectURL(f), name:f.name, dur:null };
+        if (kind === 'photo'){
+          if (/^image\//.test(f.type) || /\.(jpe?g|png|webp|gif|bmp|avif)$/i.test(f.name)) state.photos.push(item);
+        } else {
+          if (/^audio\//.test(f.type) || /\.(mp3|m4a|wav|ogg|oga|opus|aac|flac)$/i.test(f.name)){
+            state.audios.push(item);
+            probeDuration(item);
+          }
+        }
+      });
+      rebuildSections();
+      refreshChrome();
+    }
+
+    function probeDuration(item){
+      var a = new Audio();
+      a.preload = 'metadata';
+      a.onloadedmetadata = function(){
+        if (isFinite(a.duration)) { item.dur = a.duration; refreshChrome(); }
+        else {
+          // Some VBR MP3s report Infinity until seeked near the end.
+          a.currentTime = 1e7;
+          a.ondurationchange = function(){
+            if (isFinite(a.duration)) { item.dur = a.duration; refreshChrome(); }
+          };
+        }
+      };
+      a.src = item.url;
+    }
+
+    function clearKind(kind){
+      var list = kind === 'photo' ? state.photos : state.audios;
+      list.forEach(function(it){ URL.revokeObjectURL(it.url); });
+      if (kind === 'photo') state.photos = []; else state.audios = [];
+      rebuildSections();
+      refreshChrome();
+    }
+
+    /* ---------------- sections ---------------- */
+    // Sections = one per pair index. Section i defaults to photo i on audio i,
+    // so a photo is never on two audios at once.
+    function rebuildSections(){
+      var n = Math.max(state.photos.length, state.audios.length);
+      var old = state.sections;
+      var next = [];
+      for (var i = 0; i < n; i++){
+        var prev = old[i];
+        next.push({
+          photo: i < state.photos.length ? i : -1,
+          audio: i,
+          repeat: prev ? prev.repeat : 2,
+          status: 'idle', progress: 0, blobUrl: null, blobSize: null, error: null
+        });
+        if (prev && prev.blobUrl) URL.revokeObjectURL(prev.blobUrl);
+      }
+      for (var j = n; j < old.length; j++) if (old[j].blobUrl) URL.revokeObjectURL(old[j].blobUrl);
+      state.sections = next;
+      renderSections();
+    }
+
+    function sectionValid(s){
+      return s.audio < state.audios.length && s.photo >= 0 && s.photo < state.photos.length;
+    }
+    function sectionTotal(s){
+      var a = state.audios[s.audio];
+      if (!a || a.dur == null) return null;
+      return a.dur * s.repeat;
+    }
+
+    function photoOptions(selIdx){
+      var h = '<option value="-1">— No photo —</option>';
+      state.photos.forEach(function(p, i){
+        h += '<option value="'+i+'"'+(i===selIdx?' selected':'')+'>'+(i+1)+'. '+esc(p.name)+'</option>';
+      });
+      return h;
+    }
+    function repeatOptions(sel){
+      var h = '';
+      for (var r = 2; r <= 10; r++) h += '<option value="'+r+'"'+(r===sel?' selected':'')+'>'+r+'×</option>';
+      return h;
+    }
+
+    function statusPill(s){
+      switch(s.status){
+        case 'working': return '<span class="pill working">Rendering…</span>';
+        case 'done':    return '<span class="pill done">Ready · '+fmtSize(s.blobSize)+'</span>';
+        case 'error':   return '<span class="pill error">Failed</span>';
+        case 'skipped': return '<span class="pill error">Incomplete</span>';
+        default:        return '<span class="pill">Waiting</span>';
+      }
+    }
+
+    function renderSections(){
+      var grid = $('grid');
+      $('emptyState').style.display = state.sections.length ? 'none' : 'block';
+      var html = '';
+      state.sections.forEach(function(s, i){
+        var a = state.audios[s.audio];
+        var p = s.photo >= 0 ? state.photos[s.photo] : null;
+        var total = sectionTotal(s);
+        html += '<article class="card" data-i="'+i+'">'
+          + '<div class="card-top"><span class="badge">Video '+(i+1)+'</span>'+statusPill(s)+'</div>'
+          + '<div class="card-media">'
+          +   (p ? '<img src="'+p.url+'" alt="Photo for video '+(i+1)+'">' : '<div class="noimg">No photo<br>selected</div>')
+          +   '<div class="fields">'
+          +     '<div><label for="psel-'+i+'">Photo on this video</label>'
+          +     '<select class="sel psel" id="psel-'+i+'" data-i="'+i+'">'+photoOptions(s.photo)+'</select></div>'
+          +     '<div><label for="rsel-'+i+'">Audio repeater</label>'
+          +     '<select class="sel rsel" id="rsel-'+i+'" data-i="'+i+'">'+repeatOptions(s.repeat)+'</select></div>'
+          +   '</div></div>'
+          + '<div><div class="aname">'+(a ? esc(a.name) : 'No audio for this section')+'</div>'
+          + '<div class="ameta">'
+          +   (a ? 'Audio '+fmtDur(a.dur)+' · ×'+s.repeat+' repeat → <b>'+(total!=null?fmtDur(total)+' video':'…')+'</b>' : 'Add more audios to complete this section')
+          + '</div></div>'
+          + '<div class="bar'+(s.status==='working'||s.status==='done'?' on':'')+(s.status==='done'?' done':'')+'"><i style="width:'+Math.round(s.progress*100)+'%"></i></div>'
+          + (s.status==='error' && s.error ? '<div class="err-text">'+esc(s.error)+'</div>' : '')
+          + (s.status==='done' && s.blobUrl ? '<video controls preload="metadata" src="'+s.blobUrl+'"></video>' : '')
+          + '<div class="card-actions">'
+          +   '<button class="btn primary grow cbtn" data-i="'+i+'" type="button" '+(state.rendering?'disabled':'')+'>'+(s.status==='done'?'Re-create':'Create Video')+'</button>'
+          +   (s.status==='done' && s.blobUrl ? '<button class="btn dl dbtn" data-i="'+i+'" type="button">Download</button>' : '')
+          + '</div></article>';
+      });
+      grid.innerHTML = html;
+    }
+
+    // Keep DOM in sync without a full re-render (used during rendering for progress).
+    function patchCard(i){
+      var s = state.sections[i];
+      var card = $('grid').querySelector('.card[data-i="'+i+'"]');
+      if (!card) { renderSections(); return; }
+      var pill = card.querySelector('.pill');
+      var tmp = document.createElement('div'); tmp.innerHTML = statusPill(s);
+      pill.replaceWith(tmp.firstChild);
+      var bar = card.querySelector('.bar');
+      bar.className = 'bar'+(s.status==='working'||s.status==='done'?' on':'')+(s.status==='done'?' done':'');
+      bar.firstElementChild.style.width = Math.round(s.progress*100)+'%';
+    }
+    function patchMeta(i){
+      var s = state.sections[i];
+      var card = $('grid').querySelector('.card[data-i="'+i+'"]');
+      if (!card) return;
+      var a = state.audios[s.audio];
+      var total = sectionTotal(s);
+      var meta = card.querySelector('.ameta');
+      if (meta && a) meta.innerHTML = 'Audio '+fmtDur(a.dur)+' · ×'+s.repeat+' repeat → <b>'+(total!=null?fmtDur(total)+' video':'…')+'</b>';
+    }
+
+    /* ---------------- top chrome (counts / lists / buttons) ---------------- */
+    function refreshChrome(){
+      var np = state.photos.length, na = state.audios.length;
+      $('photoCount').textContent = np + (np===1?' photo':' photos');
+      $('photoCount').classList.toggle('has', np>0);
+      $('audioCount').textContent = na + (na===1?' audio':' audios');
+      $('audioCount').classList.toggle('has', na>0);
+      $('photoDrop').classList.toggle('filled', np>0);
+      $('audioDrop').classList.toggle('filled', na>0);
+      $('photoClear').classList.toggle('hidden', np===0);
+      $('audioClear').classList.toggle('hidden', na===0);
+
+      var th = '';
+      state.photos.slice(0,14).forEach(function(p){ th += '<img src="'+p.url+'" alt="">'; });
+      if (np > 14) th += '<span class="more">+'+(np-14)+'</span>';
+      $('photoThumbs').innerHTML = th;
+
+      var al = '';
+      state.audios.forEach(function(a, i){
+        al += '<li><span class="n">'+(i+1)+'</span><span class="nm">'+esc(a.name)+'</span><span class="d">'+fmtDur(a.dur)+'</span></li>';
+      });
+      $('audioList').innerHTML = al;
+
+      $('stPhotos').textContent = np;
+      $('stAudios').textContent = na;
+      $('stSections').textContent = state.sections.length;
+      var done = state.sections.filter(function(s){ return s.status==='done'; }).length;
+      $('stDone').textContent = done+' / '+state.sections.length;
+
+      var valid = state.sections.some(sectionValid);
+      $('createAllBtn').disabled = state.rendering || !valid;
+      $('downloadAllBtn').disabled = state.rendering || done===0;
+      $('createAllBtnTop').disabled = state.rendering || !valid;
+      $('downloadAllBtnTop').disabled = state.rendering || done===0;
+
+      if (!state.rendering){
+        if (state.sections.length === 0) setStatus('Add photos & audios to begin.');
+        else if (done === state.sections.length && done > 0) setStatus('All '+done+' videos are ready — tap Download All.');
+        else if (done > 0) setStatus(done+' of '+state.sections.length+' videos ready.');
+        else setStatus(state.sections.length+' section'+(state.sections.length===1?'':'s')+' ready — tap Create All.');
+      }
+      // Section metas depend on durations that arrive async.
+      state.sections.forEach(function(_, i){ patchMeta(i); });
+    }
+    function setStatus(t){ $('abStatus').textContent = t; }
+
+    // Keep the screen awake while rendering: on someone else's phone a
+    // screen timeout mid-batch can freeze or kill the tab and lose the
+    // whole render. Best-effort only — unsupported browsers just skip it.
+    var wakeLock = null;
+    async function keepAwake(on){
+      try {
+        if (on && navigator.wakeLock && !wakeLock){
+          wakeLock = await navigator.wakeLock.request('screen');
+          wakeLock.addEventListener('release', function(){ wakeLock = null; });
+        } else if (!on && wakeLock){
+          var wl = wakeLock; wakeLock = null;
+          await wl.release();
+        }
+      } catch(e){ /* wake lock is a nicety, never a failure */ }
+    }
+
+    /* ============================================================
+       Minimal MP4 (ISO-BMFF) muxer — video (avc1) + audio (mp4a)
+       ============================================================ */
+    function u8a(){ // concat Uint8Arrays / number arrays
+      var parts = Array.prototype.slice.call(arguments).map(function(p){
+        return p instanceof Uint8Array ? p : new Uint8Array(p);
+      });
+      var len = 0; parts.forEach(function(p){ len += p.length; });
+      var out = new Uint8Array(len), off = 0;
+      parts.forEach(function(p){ out.set(p, off); off += p.length; });
+      return out;
+    }
+    function b32(v){ var b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v>>>0); return b; }
+    function b16(v){ var b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, v&0xffff); return b; }
+    function b64(v){ var b = new Uint8Array(8); var d = new DataView(b.buffer); d.setUint32(0, Math.floor(v/4294967296)); d.setUint32(4, v>>>0); return b; }
+    function tag4(s){ return new Uint8Array([s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)]); }
+    function box(type){
+      var parts = Array.prototype.slice.call(arguments, 1);
+      var body = concatBytes(parts);
+      return u8a(b32(8 + body.length), tag4(type), body);
+    }
+    function fullBox(type, version, flags){
+      var parts = Array.prototype.slice.call(arguments, 3);
+      var head = new Uint8Array([version, (flags>>16)&255, (flags>>8)&255, flags&255]);
+      return box.apply(null, [type, head].concat(parts));
+    }
+    var MATRIX = u8a(b32(0x00010000), b32(0), b32(0), b32(0), b32(0x00010000), b32(0), b32(0), b32(0), b32(0x40000000));
+    var ZEROS = function(n){ return new Uint8Array(n); };
+
+    // Concatenate byte parts with a plain loop. NEVER spread/apply a big
+    // parts array into a function call: a 60-minute video has ~200k audio
+    // samples, and apply() with that many arguments throws
+    // "Maximum call stack size exceeded" on phones.
+    function concatBytes(parts){
+      var len = 0, i;
+      for (i = 0; i < parts.length; i++) len += parts[i].length;
+      var out = new Uint8Array(len), off = 0;
+      for (i = 0; i < parts.length; i++){ out.set(parts[i], off); off += parts[i].length; }
+      return out;
+    }
+    // Collects encoded chunks: remembers every chunk's size (the muxer
+    // needs per-sample sizes) but merges the bytes into ~4 MB parts, so
+    // the final Blob is built from a handful of parts, not ~200k chunks.
+    function makeCollector(){
+      var sizes = [], parts = [], pending = [], pendingBytes = 0;
+      function flush(){
+        if (!pending.length) return;
+        parts.push(pending.length === 1 ? pending[0] : concatBytes(pending));
+        pending = []; pendingBytes = 0;
+      }
+      return {
+        sizes: sizes, parts: parts,
+        push: function(data){
+          sizes.push(data.length);
+          pending.push(data); pendingBytes += data.length;
+          if (pendingBytes >= 4 * 1024 * 1024) flush();
+        },
+        finish: function(){ flush(); return { sizes: sizes, parts: parts }; }
+      };
+    }
+
+    function esdsBox(asc, maxBr, avgBr){
+      var dsi = u8a([0x05, asc.length], asc);
+      var dcd = u8a([0x04, 13 + dsi.length, 0x40, 0x15], ZEROS(3), b32(maxBr), b32(avgBr), dsi);
+      var sl  = new Uint8Array([0x06, 0x01, 0x02]);
+      var es  = u8a([0x03, 3 + dcd.length + sl.length], b16(2), [0x00], dcd, sl);
+      return fullBox('esds', 0, 0, es);
+    }
+    // Opus in MP4: dOps box. Values come from the encoder's OpusHead
+    // description when present (little-endian there, big-endian in dOps).
+    // Payload: version, channels, preSkip, sampleRate, gain, and the
+    // channelMappingFamily byte (0) — 11 bytes; players reject it shorter.
+    function dopsBox(desc){
+      var ch = 2, preSkip = 312, rate = 48000;
+      if (desc && desc.length >= 18 && desc[0] === 0x4f /* 'O' */){
+        ch = desc[9] || 2;
+        preSkip = desc[10] | (desc[11] << 8);
+        rate = (desc[12] | (desc[13] << 8) | (desc[14] << 16) | (desc[15] << 24)) >>> 0 || 48000;
+      }
+      return box('dOps', new Uint8Array([0, ch, (preSkip >> 8) & 255, preSkip & 255]), b32(rate), b16(0), new Uint8Array([0]));
+    }
+
+    // Entry tables are written straight into one preallocated buffer —
+    // building them from hundreds of thousands of tiny parts via apply()
+    // is what overflowed the call stack on long videos.
+    function sttsBox(entries){
+      var body = new Uint8Array(4 + entries.length * 8);
+      var dv = new DataView(body.buffer);
+      dv.setUint32(0, entries.length);
+      for (var i = 0; i < entries.length; i++){
+        dv.setUint32(4 + i * 8, entries[i][0]);
+        dv.setUint32(8 + i * 8, entries[i][1]);
+      }
+      return fullBox('stts', 0, 0, body);
+    }
+    function stszBox(sizes){
+      var body = new Uint8Array(8 + sizes.length * 4);
+      var dv = new DataView(body.buffer);
+      dv.setUint32(4, sizes.length);
+      for (var i = 0; i < sizes.length; i++) dv.setUint32(8 + i * 4, sizes[i]);
+      return fullBox('stsz', 0, 0, body);
+    }
+    function singleChunkTable(samplesCount, chunkOffset, sizes, extraBoxes){
+      var stsc = fullBox('stsc', 0, 0, b32(1), b32(1), b32(samplesCount), b32(1));
+      var co64 = fullBox('co64', 0, 0, b32(1), b64(chunkOffset));
+      return box.apply(null, ['stbl'].concat(extraBoxes, [stsc, stszBox(sizes), co64]));
+    }
+    function aggregateDeltas(durations){
+      var out = [];
+      durations.forEach(function(d){
+        if (out.length && out[out.length-1][1] === d) out[out.length-1][0]++;
+        else out.push([1, d]);
+      });
+      return out;
+    }
+
+    // tracks: {video:{parts, sizes, keys, dursMs, desc(avcC bytes), w,h}, audio:{parts, sizes, durs, desc(ASC bytes), codec}}
+    function muxMP4(video, audio, totalMs){
+      var ftyp = box('ftyp', tag4('isom'), b32(512), tag4('isom'), tag4('iso2'), tag4('avc1'), tag4('mp41'));
+      var vBytes = 0, aBytes = 0, bi;
+      for (bi = 0; bi < video.sizes.length; bi++) vBytes += video.sizes[bi];
+      for (bi = 0; bi < audio.sizes.length; bi++) aBytes += audio.sizes[bi];
+      var mdatHeaderLen = 16; // 64-bit largesize form
+      var vOffset = ftyp.length + mdatHeaderLen;
+      var aOffset = vOffset + vBytes;
+      var mdatSize = mdatHeaderLen + vBytes + aBytes;
+      var mdatHead = u8a(b32(1), tag4('mdat'), b64(mdatSize));
+
+      /* --- video track --- */
+      var vDurs = video.dursMs;
+      var vSizes = video.sizes;
+      var keyIdx = [];
+      video.keys.forEach(function(kk, i){ if (kk) keyIdx.push(i+1); });
+      var avc1 = box('avc1',
+        ZEROS(6), b16(1), ZEROS(16),
+        b16(video.w), b16(video.h), b32(0x00480000), b32(0x00480000), ZEROS(4), b16(1),
+        ZEROS(32), b16(0x0018), b16(0xffff),
+        box('avcC', video.desc));
+      var vStsd = fullBox('stsd', 0, 0, b32(1), avc1);
+      var vExtras = [vStsd, sttsBox(aggregateDeltas(vDurs))];
+      if (keyIdx.length) {
+        var ssBody = new Uint8Array(4 + keyIdx.length * 4);
+        var sdv = new DataView(ssBody.buffer);
+        sdv.setUint32(0, keyIdx.length);
+        for (var ki = 0; ki < keyIdx.length; ki++) sdv.setUint32(4 + ki * 4, keyIdx[ki]);
+        vExtras.push(fullBox('stss', 0, 0, ssBody));
+      }
+      var vStbl = singleChunkTable(video.sizes.length, vOffset, vSizes, vExtras);
+      var vMinf = box('minf',
+        fullBox('vmhd', 0, 1, b16(0), b16(0), b16(0), b16(0)),
+        box('dinf', fullBox('dref', 0, 0, b32(1), fullBox('url ', 0, 1))),
+        vStbl);
+      var vMdhd = fullBox('mdhd', 0, 0, b32(0), b32(0), b32(1000), b32(totalMs), b16(0x55c4), b16(0));
+      var vMdia = box('mdia', vMdhd, fullBox('hdlr', 0, 0, ZEROS(4), tag4('vide'), ZEROS(12), u8a([86,105,100,101,111,72,97,110,100,108,101,114,0])), vMinf);
+      var vTkhd = fullBox('tkhd', 0, 7, b32(0), b32(0), b32(1), ZEROS(4), b32(totalMs), ZEROS(8),
+        b16(0), b16(0), b16(0), b16(0), MATRIX, b32(video.w<<16), b32(video.h<<16));
+      var vTrak = box('trak', vTkhd, vMdia);
+
+      /* --- audio track (48 kHz; per-sample durations from the encoder) --- */
+      var aDurs = audio.durs;
+      var totalASamples = 0; aDurs.forEach(function(d){ totalASamples += d; });
+      var aSizes = audio.sizes;
+      var aEntry;
+      if (audio.codec === 'opus') {
+        aEntry = box('Opus',
+          ZEROS(6), b16(1), ZEROS(8), b16(2), b16(16), b16(0), b16(0), b32(48000<<16),
+          dopsBox(audio.desc));
+      } else {
+        aEntry = box('mp4a',
+          ZEROS(6), b16(1), ZEROS(8), b16(2), b16(16), b16(0), b16(0), b32(48000<<16),
+          esdsBox(audio.desc, 192000, 160000));
+      }
+      var aStsd = fullBox('stsd', 0, 0, b32(1), aEntry);
+      var aStbl = singleChunkTable(audio.sizes.length, aOffset, aSizes,
+        [aStsd, sttsBox(aggregateDeltas(aDurs))]);
+      var aMinf = box('minf',
+        fullBox('smhd', 0, 0, b16(0), b16(0)),
+        box('dinf', fullBox('dref', 0, 0, b32(1), fullBox('url ', 0, 1))),
+        aStbl);
+      var aMdhd = fullBox('mdhd', 0, 0, b32(0), b32(0), b32(48000), b32(totalASamples), b16(0x55c4), b16(0));
+      var aMdia = box('mdia', aMdhd, fullBox('hdlr', 0, 0, ZEROS(4), tag4('soun'), ZEROS(12), u8a([83,111,117,110,100,72,97,110,100,108,101,114,0])), aMinf);
+      var aTkhd = fullBox('tkhd', 0, 7, b32(0), b32(0), b32(2), ZEROS(4), b32(totalMs), ZEROS(8),
+        b16(0), b16(0), b16(0x0100), b16(0), MATRIX, b32(0), b32(0));
+      var aTrak = box('trak', aTkhd, aMdia);
+
+      var mvhd = fullBox('mvhd', 0, 0, b32(0), b32(0), b32(1000), b32(totalMs),
+        b32(0x00010000), b16(0x0100), b16(0), ZEROS(8), MATRIX, ZEROS(24), b32(3));
+      var moov = box('moov', mvhd, vTrak, aTrak);
+
+      var parts = [ftyp, mdatHead];
+      for (var pi = 0; pi < video.parts.length; pi++) parts.push(video.parts[pi]);
+      for (var pj = 0; pj < audio.parts.length; pj++) parts.push(audio.parts[pj]);
+      parts.push(moov);
+      return new Blob(parts, { type:'video/mp4' });
+    }
+
+    /* ============================================================
+       Render engine (WebCodecs)
+       ============================================================ */
+    var engineOK = null; // null=unknown, true/false after probe
+    var videoCfgCache = {};
+    var audioCfgCache = undefined; // undefined=unprobed, null=unsupported, {codec} otherwise
+
+    function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+    function throwIfCancelled(){ if (state.cancel) throw new Error('__cancelled__'); }
+
+    // Prefer AAC (best player/YouTube compatibility); fall back to Opus,
+    // which Chrome and Firefox encode on platforms without an AAC encoder.
+    async function probeAudioCfg(){
+      if (audioCfgCache !== undefined) return audioCfgCache;
+      audioCfgCache = null;
+      if (typeof AudioEncoder === 'undefined') return null;
+      var codecs = ['mp4a.40.2', 'opus'];
+      for (var i = 0; i < codecs.length; i++){
+        try {
+          var r = await AudioEncoder.isConfigSupported({ codec:codecs[i], sampleRate:48000, numberOfChannels:2, bitrate:128000 });
+          if (r && r.supported) { audioCfgCache = { codec: codecs[i] }; return audioCfgCache; }
+        } catch(e){ /* try next */ }
+      }
+      return null;
+    }
+    async function probeVideoCfg(w, h, vbr){
+      var key = w+'x'+h;
+      if (videoCfgCache[key]) return videoCfgCache[key];
+      if (typeof VideoEncoder === 'undefined') return null;
+      var codecs = ['avc1.640034','avc1.640033','avc1.640032','avc1.64002a','avc1.640028','avc1.4d4028','avc1.42001f'];
+      var accels = ['prefer-hardware','prefer-software','no-preference'];
+      for (var a = 0; a < accels.length; a++){
+        for (var c = 0; c < codecs.length; c++){
+          var cfg = { codec:codecs[c], width:w, height:h, bitrate:vbr, framerate:30,
+                      hardwareAcceleration:accels[a], avc:{ format:'avc' } };
+          try {
+            var r = await VideoEncoder.isConfigSupported(cfg);
+            if (r && r.supported) { videoCfgCache[key] = r.config || cfg; return videoCfgCache[key]; }
+          } catch(e){ /* try next */ }
+        }
+      }
+      return null;
+    }
+    async function checkEngine(){
+      var line = $('engineLine');
+      var dims = resDims();
+      var v = await probeVideoCfg(dims.w, dims.h, dims.vbr);
+      var a = await probeAudioCfg();
+      engineOK = !!(v && a);
+      if (engineOK) {
+        line.textContent = 'Video engine ready — fast on-device rendering (WebCodecs).';
+        line.className = 'engine-line ok';
+      } else {
+        line.textContent = 'This browser has no fast video engine. Please open SIBT V TOOL in Chrome (Android or desktop) for full speed.';
+        line.className = 'engine-line bad';
+      }
+      return engineOK;
+    }
+
+    async function decodeAudio48k(file){
+      var ab = await file.arrayBuffer();
+      var ctx = new OfflineAudioContext(2, 1, 48000);
+      return await ctx.decodeAudioData(ab);
+    }
+
+    function waitImgLoad(img){
+      return new Promise(function(res, rej){
+        if (img.complete && img.naturalWidth > 0) return res();
+        img.onload = function(){ res(); };
+        img.onerror = function(){ rej(new Error('image load failed')); };
+      });
+    }
+
+    // Decode a photo as defensively as possible. Some phones fail
+    // createImageBitmap on very large or unusual JPEGs even though the
+    // same file displays fine in an <img> tag (the card thumbnails use
+    // <img>, which is why a photo can look fine yet fail at render time).
+    // Try every decode path; the caller reports the photo by name if
+    // all of them fail.
+    async function decodePhoto(file){
+      if (typeof createImageBitmap !== 'undefined'){
+        try {
+          var b1 = await createImageBitmap(file);
+          if (b1.width > 0 && b1.height > 0) return { src:b1, w:b1.width, h:b1.height, close:function(){ try{ b1.close(); }catch(e){} } };
+          try{ b1.close(); }catch(e){}
+        } catch(e){ /* try next path */ }
+        try {
+          var b2 = await createImageBitmap(file, { imageOrientation:'from-image' });
+          if (b2.width > 0 && b2.height > 0) return { src:b2, w:b2.width, h:b2.height, close:function(){ try{ b2.close(); }catch(e){} } };
+          try{ b2.close(); }catch(e){}
+        } catch(e){ /* try next path */ }
+      }
+      var url = URL.createObjectURL(file);
+      try {
+        var img = new Image();
+        img.src = url;
+        var decoded = false;
+        if (img.decode){
+          try { await img.decode(); decoded = true; } catch(e){ /* fall through to the load event */ }
+        }
+        if (!decoded) await waitImgLoad(img);
+        if (!img.naturalWidth || !img.naturalHeight) throw new Error('empty image');
+        return { src:img, w:img.naturalWidth, h:img.naturalHeight,
+                 close:function(){ URL.revokeObjectURL(url); img.removeAttribute('src'); } };
+      } catch(e){
+        URL.revokeObjectURL(url);
+        throw e;
+      }
+    }
+
+    // Draw the photo cover-fit into a w×h canvas. Very large sources are
+    // stepped down through intermediate canvases so a 12MP+ photo never
+    // hits the canvas in one giant blit on a low-memory phone.
+    function drawStillCover(ctx, src, sw, sh, w, h){
+      var cur = src, cw = sw, ch = sh;
+      while (cw > w * 2 || ch > h * 2){
+        var nw = Math.max(w, Math.floor(cw / 2)), nh = Math.max(h, Math.floor(ch / 2));
+        var tc = document.createElement('canvas');
+        tc.width = nw; tc.height = nh;
+        tc.getContext('2d').drawImage(cur, 0, 0, nw, nh);
+        cur = tc; cw = nw; ch = nh;
+      }
+      var scale = Math.max(w / cw, h / ch);
+      var dw = cw * scale, dh = ch * scale;
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+      ctx.drawImage(cur, (w - dw) / 2, (h - dh) / 2, dw, dh);
+    }
+
+    async function renderSection(idx, onProgress){
+      var s = state.sections[idx];
+      var dims = resDims();
+      var vCfg = await probeVideoCfg(dims.w, dims.h, dims.vbr);
+      if (!vCfg) throw new Error('H.264 video encoding is not available in this browser. Please use Chrome on Android or desktop.');
+      var aCfg = await probeAudioCfg();
+      if (!aCfg) throw new Error('Audio encoding is not available in this browser. Please use Chrome on Android or desktop.');
+
+      var photo = state.photos[s.photo];
+      var audioItem = state.audios[s.audio];
+
+      /* --- prepare the still frame FIRST, while memory is freest ---
+         The photo is drawn straight onto the target-size canvas and the
+         full-resolution decode is released before the audio decode below
+         allocates its (large) PCM buffer. Decoding the photo after the
+         audio is what made big photos fail on low-memory phones. */
+      onProgress(0.02);
+      var decoded;
+      try { decoded = await decodePhoto(photo.file); }
+      catch(e){
+        throw new Error('Photo "'+photo.name+'" could not be opened on this phone. Please re-select it, or use a smaller JPG/PNG copy of that photo.');
+      }
+      throwIfCancelled();
+      var canvas = document.createElement('canvas');
+      canvas.width = dims.w; canvas.height = dims.h;
+      var cctx = canvas.getContext('2d');
+      try { drawStillCover(cctx, decoded.src, decoded.w, decoded.h, dims.w, dims.h); }
+      finally { decoded.close(); }
+
+      /* --- decode audio (48 kHz stereo), looped later in small chunks --- */
+      var buf;
+      try { buf = await decodeAudio48k(audioItem.file); }
+      catch(e){
+        throw new Error('Audio "'+audioItem.name+'" could not be read on this phone. Please re-select it, or use an MP3/M4A copy of that audio.');
+      }
+      throwIfCancelled();
+      if (audioItem.dur == null) { audioItem.dur = buf.duration; refreshChrome(); }
+      var srcLen = buf.length;
+      var ch0 = buf.getChannelData(0);
+      var ch1 = buf.numberOfChannels > 1 ? buf.getChannelData(1) : ch0;
+      var totalSamples = srcLen * s.repeat;
+      var aFrames = Math.max(1, Math.ceil(totalSamples / 1024));
+      var paddedSamples = aFrames * 1024;
+      var totalMs = Math.round(paddedSamples / 48);
+
+      /* --- encoders (output bytes stream into merging collectors) --- */
+      var vColl = makeCollector(), aColl = makeCollector();
+      var vKeys = [], aTs = [], vDesc = null, aDesc = null, encErr = null;
+      var venc = new VideoEncoder({
+        output: function(chunk, meta){
+          if (meta && meta.decoderConfig && meta.decoderConfig.description && !vDesc)
+            vDesc = new Uint8Array(meta.decoderConfig.description);
+          var b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+          vColl.push(b); vKeys.push(chunk.type === 'key');
+        },
+        error: function(e){ encErr = e; }
+      });
+      venc.configure(vCfg);
+      var aenc = new AudioEncoder({
+        output: function(chunk, meta){
+          if (meta && meta.decoderConfig && meta.decoderConfig.description && !aDesc)
+            aDesc = new Uint8Array(meta.decoderConfig.description);
+          var b = new Uint8Array(chunk.byteLength); chunk.copyTo(b);
+          aColl.push(b); aTs.push(chunk.timestamp || 0);
+        },
+        error: function(e){ encErr = e; }
+      });
+      aenc.configure({ codec:aCfg.codec, sampleRate:48000, numberOfChannels:2, bitrate:128000 });
+
+      try {
+        /* --- video: one frame every 5 s, each held by its duration --- */
+        var FRAME_MS = 5000;
+        var nFrames = Math.max(1, Math.ceil(totalMs / FRAME_MS));
+        var base = new VideoFrame(canvas, { timestamp:0, duration: FRAME_MS*1000 });
+        for (var i = 0; i < nFrames; i++){
+          throwIfCancelled(); if (encErr) throw encErr;
+          var durMs = (i === nFrames-1) ? (totalMs - FRAME_MS*(nFrames-1)) : FRAME_MS;
+          if (durMs <= 0) durMs = FRAME_MS;
+          var vf = new VideoFrame(base, { timestamp: i*FRAME_MS*1000, duration: durMs*1000 });
+          venc.encode(vf, { keyFrame: i === 0 });
+          vf.close();
+          while (venc.encodeQueueSize > 24) { await sleep(4); if (encErr) throw encErr; throwIfCancelled(); }
+        }
+        base.close();
+        await venc.flush();
+        if (encErr) throw encErr;
+        // frame durations: chunks arrive in submission order
+        var vDurs = [], acc = 0, nV = vColl.sizes.length;
+        for (var k = 0; k < nV; k++){
+          var d = (k === nV-1) ? (totalMs - acc) : Math.min(FRAME_MS, totalMs - acc);
+          vDurs.push(Math.max(1, d)); acc += vDurs[k];
+        }
+        onProgress(0.15);
+
+        /* --- audio: stream the decoded buffer, looped `repeat` times --- */
+        var plane = new Float32Array(1024 * 2);
+        for (var f = 0; f < aFrames; f++){
+          throwIfCancelled(); if (encErr) throw encErr;
+          for (var j = 0; j < 1024; j++){
+            var g = f*1024 + j;
+            if (g < totalSamples) {
+              var src = g % srcLen;
+              plane[j] = ch0[src];
+              plane[1024 + j] = ch1[src];
+            } else { plane[j] = 0; plane[1024 + j] = 0; }
+          }
+          var ad = new AudioData({
+            format:'f32-planar', sampleRate:48000, numberOfChannels:2, numberOfFrames:1024,
+            timestamp: Math.round(f * 1024 * 1e6 / 48000),
+            data: plane.buffer.slice(0)
+          });
+          aenc.encode(ad);
+          ad.close();
+          if ((f & 31) === 0) onProgress(0.15 + 0.8 * (f / aFrames));
+          while (aenc.encodeQueueSize > 32) { await sleep(4); if (encErr) throw encErr; throwIfCancelled(); }
+        }
+        await aenc.flush();
+        if (encErr) throw encErr;
+        // Per-sample durations in 48 kHz units, derived from chunk timestamps
+        // (1024 for AAC frames, ~960 for Opus frames).
+        var aDurs = [];
+        for (var ai = 0; ai < aTs.length; ai++){
+          var endUs = (ai + 1 < aTs.length) ? aTs[ai+1] : Math.round(paddedSamples * 1e6 / 48000);
+          aDurs.push(Math.max(1, Math.round((endUs - aTs[ai]) * 48000 / 1e6)));
+        }
+        onProgress(0.97);
+      } finally {
+        try { if (venc.state !== 'closed') venc.close(); } catch(e){}
+        try { if (aenc.state !== 'closed') aenc.close(); } catch(e){}
+      }
+
+      if (!vDesc) throw new Error('Encoder did not provide H.264 configuration. Try Chrome on Android or desktop.');
+      if (aCfg.codec === 'mp4a.40.2' && !aDesc) throw new Error('Encoder did not provide AAC configuration. Try Chrome on Android or desktop.');
+      var vData = vColl.finish(), aData = aColl.finish();
+      if (!vData.sizes.length || !aData.sizes.length) throw new Error('Encoding produced no data.');
+
+      var blob = muxMP4(
+        { parts:vData.parts, sizes:vData.sizes, keys:vKeys, dursMs:vDurs, desc:vDesc, w:dims.w, h:dims.h },
+        { parts:aData.parts, sizes:aData.sizes, durs:aDurs, desc:aDesc, codec:aCfg.codec },
+        totalMs);
+      onProgress(1);
+      return blob;
+    }
+
+    /* ============================================================
+       Actions
+       ============================================================ */
+    async function createOne(idx){
+      var s = state.sections[idx];
+      if (!sectionValid(s)) {
+        s.status = 'skipped';
+        s.error = s.audio >= state.audios.length ? 'No audio in this section.' : 'No photo selected for this section.';
+        renderSections(); refreshChrome();
+        return false;
+      }
+      s.status = 'working'; s.progress = 0; s.error = null;
+      if (s.blobUrl) { URL.revokeObjectURL(s.blobUrl); s.blobUrl = null; s.blobSize = null; }
+      renderSections(); refreshChrome();
+      try {
+        var blob = await renderSection(idx, function(p){
+          s.progress = p; patchCard(idx);
+        });
+        s.blobUrl = URL.createObjectURL(blob);
+        s.blobSize = blob.size;
+        s.status = 'done'; s.progress = 1;
+        renderSections(); refreshChrome();
+        return true;
+      } catch(e){
+        if (e && e.message === '__cancelled__') { s.status = 'idle'; s.progress = 0; }
+        else { s.status = 'error'; s.error = (e && e.message) ? e.message : 'Rendering failed.'; }
+        renderSections(); refreshChrome();
+        return false;
+      }
+    }
+
+    async function createAll(){
+      if (state.rendering) return;
+      state.rendering = true; state.cancel = false;
+      $('cancelBtn').classList.remove('hidden');
+      keepAwake(true);
+      $('abBar').classList.add('on');
+      renderSections(); refreshChrome();
+      var todo = state.sections.map(function(s, i){ return i; })
+        .filter(function(i){ return state.sections[i].status !== 'done'; });
+      var finished = 0;
+      for (var t = 0; t < todo.length; t++){
+        if (state.cancel) break;
+        var idx = todo[t];
+        setStatus('Creating video '+(idx+1)+' of '+state.sections.length+'…');
+        await createOne(idx);
+        finished++;
+        $('abBarFill').style.width = Math.round(finished / Math.max(1,todo.length) * 100)+'%';
+      }
+      state.rendering = false;
+      keepAwake(false);
+      $('cancelBtn').classList.add('hidden');
+      setTimeout(function(){ $('abBar').classList.remove('on'); $('abBarFill').style.width = '0%'; }, 900);
+      renderSections(); refreshChrome();
+      if (state.cancel) setStatus('Cancelled. Finished videos are kept — tap Download to save them.');
+    }
+
+    function downloadSection(idx){
+      var s = state.sections[idx];
+      if (!s || !s.blobUrl) return;
+      var a = document.createElement('a');
+      a.href = s.blobUrl;
+      a.download = 'SIBT_Video_' + String(idx+1).padStart(2,'0') + '_' + safeName(state.audios[s.audio] ? state.audios[s.audio].name : 'audio') + '.mp4';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    async function downloadAll(){
+      var ready = state.sections.map(function(s, i){ return i; })
+        .filter(function(i){ return state.sections[i].status === 'done' && state.sections[i].blobUrl; });
+      for (var k = 0; k < ready.length; k++){
+        setStatus('Downloading video '+(ready[k]+1)+' ('+(k+1)+' of '+ready.length+')…');
+        downloadSection(ready[k]);
+        await sleep(650); // let each download start before triggering the next
+      }
+      if (ready.length) setStatus(ready.length+' video'+(ready.length===1?'':'s')+' downloading — check your Downloads folder.');
+    }
+
+    /* ============================================================
+       Wiring
+       ============================================================ */
+    $('photoBtn').addEventListener('click', function(){ $('photoInput').click(); });
+    $('audioBtn').addEventListener('click', function(){ $('audioInput').click(); });
+    bindDrop($('photoDrop'), $('photoInput'), 'photo');
+    bindDrop($('audioDrop'), $('audioInput'), 'audio');
+    $('photoClear').addEventListener('click', function(){ clearKind('photo'); });
+    $('audioClear').addEventListener('click', function(){ clearKind('audio'); });
+
+    $('grid').addEventListener('change', function(e){
+      var el = e.target;
+      var i = parseInt(el.getAttribute('data-i'), 10);
+      if (isNaN(i) || !state.sections[i]) return;
+      if (el.classList.contains('psel')){
+        var val = parseInt(el.value, 10);
+        var s = state.sections[i];
+        var oldPhoto = s.photo;
+        if (val >= 0 && val !== oldPhoto){
+          // Swap: never let one photo sit on two audios at once.
+          for (var j = 0; j < state.sections.length; j++){
+            if (j !== i && state.sections[j].photo === val) { state.sections[j].photo = oldPhoto; break; }
+          }
+        }
+        s.photo = val;
+        if (s.status === 'done'){ s.status = 'idle'; if (s.blobUrl){ URL.revokeObjectURL(s.blobUrl); s.blobUrl = null; s.blobSize = null; } }
+        renderSections(); refreshChrome();
+      }
+      if (el.classList.contains('rsel')){
+        state.sections[i].repeat = parseInt(el.value, 10) || 1;
+        var sc = state.sections[i];
+        if (sc.status === 'done'){ sc.status = 'idle'; if (sc.blobUrl){ URL.revokeObjectURL(sc.blobUrl); sc.blobUrl = null; sc.blobSize = null; } renderSections(); }
+        else patchMeta(i);
+        refreshChrome();
+      }
+    });
+    $('grid').addEventListener('click', async function(e){
+      var btn = e.target.closest('button');
+      if (!btn) return;
+      var i = parseInt(btn.getAttribute('data-i'), 10);
+      if (isNaN(i)) return;
+      if (btn.classList.contains('dbtn')) { downloadSection(i); return; }
+      if (btn.classList.contains('cbtn')){
+        if (state.rendering) return;
+        state.rendering = true; state.cancel = false;
+        $('cancelBtn').classList.remove('hidden');
+        keepAwake(true);
+        refreshChrome();
+        await createOne(i);
+        state.rendering = false;
+        keepAwake(false);
+        $('cancelBtn').classList.add('hidden');
+        refreshChrome();
+      }
+    });
+
+    $('resSel').addEventListener('change', function(){
+      state.res = parseInt(this.value, 10) || 720;
+      checkEngine();
+    });
+    $('repeatAllSel').addEventListener('change', function(){
+      var r = parseInt(this.value, 10) || 1;
+      state.sections.forEach(function(s){
+        if (s.repeat !== r && s.status === 'done'){ s.status = 'idle'; if (s.blobUrl){ URL.revokeObjectURL(s.blobUrl); s.blobUrl = null; s.blobSize = null; } }
+        s.repeat = r;
+      });
+      renderSections(); refreshChrome();
+    });
+    $('createAllBtn').addEventListener('click', createAll);
+    $('downloadAllBtn').addEventListener('click', downloadAll);
+    $('createAllBtnTop').addEventListener('click', createAll);
+    $('downloadAllBtnTop').addEventListener('click', downloadAll);
+    $('cancelBtn').addEventListener('click', function(){ state.cancel = true; });
+    // The browser drops the wake lock when the tab is hidden; re-take it
+    // if the user comes back while a batch is still rendering.
+    document.addEventListener('visibilitychange', function(){
+      if (document.visibilityState === 'visible' && state.rendering) keepAwake(true);
+    });
+
+    rebuildSections();
+    refreshChrome();
+    checkEngine();
+    </script>
+  </body>
+</html>
